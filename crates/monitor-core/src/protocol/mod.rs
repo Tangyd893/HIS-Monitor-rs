@@ -1,9 +1,16 @@
-//! Protobuf 协议定义（预留给 tonic/prost 构建生成）
+//! Protobuf 协议定义
+//!
+//! 由 build.rs 通过 tonic-build 编译 proto 文件自动生成 Rust 代码。
+//! 包含 monitor 和 alert 两个 package 的消息类型。
+//!
+//! 生成的代码仅依赖 `prost`，无需 `tonic` 运行时。
 
-// 后续通过 build.rs 编译 proto 文件生成 Rust 代码：
-// pub mod monitor {
-//     tonic::include_proto!("monitor");
-// }
-// pub mod alert {
-//     tonic::include_proto!("alert");
-// }
+/// monitor package: MetricReport
+pub mod monitor {
+    include!(concat!(env!("OUT_DIR"), "/monitor.rs"));
+}
+
+/// alert package: AlertEvent
+pub mod alert {
+    include!(concat!(env!("OUT_DIR"), "/alert.rs"));
+}

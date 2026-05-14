@@ -13,12 +13,15 @@ tracing = { workspace = true }
 chrono = { workspace = true }
 config = { workspace = true }
 reqwest = { workspace = true }
+prost = { workspace = true }
 tonic = { workspace = true, optional = true }
-prost = { workspace = true, optional = true }
+
+[build-dependencies]
+prost-build = "0.14"
 
 [dev-dependencies]
 serde_yaml = "0.9"
 
 [features]
 default = []
-grpc = ["tonic", "prost"]
+grpc = ["tonic"]

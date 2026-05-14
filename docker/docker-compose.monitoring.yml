@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # ========== HIS-Monitor-rs 核心服务 ==========
+  monitor-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "9100:9100"
+      - "9101:9101"
+    environment:
+      - MONITOR_COLLECTOR__INTERVAL_SECS=15
+      - RUST_LOG=info
+    depends_on:
+      - victoria-metrics
+
+  # ========== 时序指标存储 ==========
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - "8428:8428"
+    volumes:
+      - victoria_metrics_data:/victoria-metrics-data
+    command:
+      - "--storageDataPath=/victoria-metrics-data"
+      - "--retentionPeriod=12"
+
+  # ========== 可视化 ==========
+  grafana:
+    image: grafana/grafana:11.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ../dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+
+  # ========== 链路追踪 ==========
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+
+  # ========== 基础设施 Exporter ==========
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://his_admin:${DB_PASSWORD}@his-postgres:5432/?sslmode=disable
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    ports:
+      - "9121:9121"
+    command: ["-redis.addr", "redis://his-redis:6379"]
+
+  rabbitmq-exporter:
+    image: kbudde/rabbitmq-exporter:latest
+    ports:
+      - "9419:9419"
+    environment:
+      - RABBIT_URL=http://his-rabbitmq:15672
+
+volumes:
+  victoria_metrics_data:
+  grafana_data:

@@ -1,0 +1,15 @@
+# Rust
+/target/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# DeepSeek TUI internal
+.deepseek/
+
+# OS
+.DS_Store
+Thumbs.db

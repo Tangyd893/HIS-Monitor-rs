@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package monitor;
+
+// 指标数据上报
+message MetricReport {
+    string name = 1;
+    map<string, string> labels = 2;
+    double value = 3;
+    int64 timestamp_ms = 4;
+}

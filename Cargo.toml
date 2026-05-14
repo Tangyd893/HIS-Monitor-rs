@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/monitor-core",
+    "crates/monitor-collector",
+    "crates/monitor-processor",
+    "crates/monitor-alert",
+    "crates/monitor-api",
+    "crates/monitor-probe",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/Tangyd893/HIS-Monitor-rs"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Date & time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration
+config = "0.15"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json"] }
+
+# gRPC / Protobuf
+tonic = "0.14"
+prost = "0.14"
+
+# Web framework (monitor-api)
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Prometheus metrics
+prometheus = "0.13"
+
+# Logging adapter
+tracing-log = "0.2"

@@ -1,0 +1,12 @@
+[package]
+name = "monitor-processor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+monitor-core = { path = "../monitor-core" }
+tokio = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }

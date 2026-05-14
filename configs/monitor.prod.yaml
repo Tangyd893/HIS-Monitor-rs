@@ -1,0 +1,5 @@
+# HIS-Monitor-rs 生产环境配置
+# 此文件由 CI/CD 注入实际值，此处仅占位
+
+collector:
+  interval_secs: 15

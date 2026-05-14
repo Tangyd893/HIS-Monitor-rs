@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package alert;
+
+// 告警事件
+message AlertEvent {
+    string id = 1;
+    string rule_name = 2;
+    string level = 3;    // Emergency / Critical / Warning / Info
+    string status = 4;   // Firing / Resolved / Silenced
+    string summary = 5;
+    string description = 6;
+    string service_name = 7;
+    int64 fired_at_ms = 8;
+    map<string, string> labels = 9;
+}

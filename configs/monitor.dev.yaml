@@ -1,0 +1,10 @@
+# HIS-Monitor-rs 开发环境配置
+
+collector:
+  interval_secs: 10
+
+api:
+  port: 9101
+
+probe:
+  interval_secs: 15

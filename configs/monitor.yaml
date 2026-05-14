@@ -1,0 +1,35 @@
+# HIS-Monitor-rs 默认配置
+
+collector:
+  interval_secs: 15
+  timeout_secs: 10
+  targets:
+    - name: "gateway"
+      url: "http://localhost:8080/metrics"
+    - name: "auth"
+      url: "http://localhost:8081/metrics"
+    - name: "user"
+      url: "http://localhost:8082/metrics"
+      labels:
+        - ["department", "registration"]
+    - name: "postgres"
+      url: "http://localhost:9187/metrics"
+      interval_secs: 30
+    - name: "redis"
+      url: "http://localhost:9121/metrics"
+      interval_secs: 15
+
+processor:
+  batch_size: 1000
+  sample_enabled: false
+  sample_rate: 4
+
+alert:
+  enabled: true
+
+api:
+  host: "0.0.0.0"
+  port: 9100
+
+probe:
+  interval_secs: 30

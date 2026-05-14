@@ -13,3 +13,4 @@ serde = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
 prometheus = { workspace = true }
+async-trait = "0.1"

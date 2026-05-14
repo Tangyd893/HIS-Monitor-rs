@@ -19,3 +19,4 @@ tracing-subscriber = { workspace = true }
 chrono = { workspace = true }
 prometheus = { workspace = true }
 anyhow = { workspace = true }
+async-trait = "0.1"

@@ -157,6 +157,11 @@ impl RuleEngine {
     pub fn get_rule(&self, name: &str) -> Option<&AlertRule> {
         self.rules.iter().find(|r| r.name == name)
     }
+
+    /// 获取所有规则引用
+    pub fn all_rules(&self) -> &[AlertRule] {
+        &self.rules
+    }
 }
 
 /// 指标名匹配（支持 `*` 前缀通配，如 `http_*`）

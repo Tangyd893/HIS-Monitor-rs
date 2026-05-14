@@ -6,11 +6,11 @@
 use axum::{
     extract::Request,
     http::{Method, StatusCode},
-    middleware::{self, Next},
+    middleware::Next,
     response::Response,
 };
 use std::time::Instant;
-use tracing::{info, info_span, Span};
+use tracing::{info, info_span};
 
 /// 请求追踪 Span 中间件
 ///
@@ -188,7 +188,7 @@ mod tests {
     async fn test_tracing_middleware_does_not_block() {
         let app = Router::new()
             .route("/test", get(|| async { "ok" }))
-            .layer(middleware::from_fn(tracing_middleware));
+            .layer(axum::middleware::from_fn(tracing_middleware));
 
         let req = Request::builder()
             .uri("/test")
@@ -202,7 +202,7 @@ mod tests {
     async fn test_logger_middleware() {
         let app = Router::new()
             .route("/log", get(|| async { "logged" }))
-            .layer(middleware::from_fn(logger_middleware));
+            .layer(axum::middleware::from_fn(logger_middleware));
 
         let req = Request::builder()
             .uri("/log")

@@ -10,7 +10,7 @@ use crate::router::{AlertRouter, Channel};
 use crate::silence::SilenceManager;
 use monitor_core::model::alert::Alert;
 use std::sync::Arc;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tracing::{debug, error, info};
 
 // ── NotifyChannel trait ──
@@ -38,15 +38,15 @@ pub trait NotifyChannel: Send + Sync {
 pub struct NotifyDispatcher {
     /// 路由器
     router: AlertRouter,
-    /// 静默管理器
-    silence: SilenceManager,
+    /// 静默管理器（共享引用，与 API handler 共享同一实例）
+    silence: Arc<Mutex<SilenceManager>>,
     /// 通道注册表
     channels: Vec<Box<dyn NotifyChannel>>,
 }
 
 impl NotifyDispatcher {
     /// 创建分发器
-    pub fn new(router: AlertRouter, silence: SilenceManager) -> Self {
+    pub fn new(router: AlertRouter, silence: Arc<Mutex<SilenceManager>>) -> Self {
         Self {
             router,
             silence,
@@ -103,8 +103,9 @@ impl NotifyDispatcher {
     pub async fn handle_event(&self, event: &AlertStateChange) {
         match event {
             AlertStateChange::Fired(alert) => {
-                // 检查静默
-                if let Some(rule) = self.silence.is_silenced(alert) {
+                // 检查静默（锁定共享的 SilenceManager）
+                let silence = self.silence.lock().await;
+                if let Some(rule) = silence.is_silenced(alert) {
                     info!(
                         alert_id = alert.id,
                         silence_id = rule.id,
@@ -113,6 +114,7 @@ impl NotifyDispatcher {
                     );
                     return;
                 }
+                drop(silence);
 
                 info!(
                     alert_id = alert.id,
@@ -194,7 +196,7 @@ mod tests {
     #[tokio::test]
     async fn test_dispatcher_sends_to_console() {
         let router = AlertRouter::with_defaults();
-        let silence = SilenceManager::new();
+        let silence = Arc::new(Mutex::new(SilenceManager::new()));
         let mut dispatcher = NotifyDispatcher::new(router, silence);
         dispatcher.register(Box::new(ConsoleChannel::new()));
 
@@ -208,7 +210,7 @@ mod tests {
     #[tokio::test]
     async fn test_dispatcher_handles_fired_event() {
         let router = AlertRouter::with_defaults();
-        let silence = SilenceManager::new();
+        let silence = Arc::new(Mutex::new(SilenceManager::new()));
         let mut dispatcher = NotifyDispatcher::new(router, silence);
         dispatcher.register(Box::new(ConsoleChannel::new()));
 

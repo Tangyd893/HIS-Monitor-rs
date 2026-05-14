@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HIS-Monitor-rs · 运营监控大屏</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22>📊</text></svg>">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- 顶部栏 -->
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">🩺</span>
+    <span class="title">HIS-Monitor-rs</span>
+    <span class="subtitle">医院信息系统监控平台</span>
+  </div>
+  <div class="topbar-status">
+    <span id="topbar-health" class="badge badge-unknown">● 检测中</span>
+    <span id="topbar-alerts" class="badge badge-unknown">告警: —</span>
+    <span id="topbar-clock" class="badge badge-time"></span>
+  </div>
+</header>
+
+<!-- 主布局 -->
+<div id="layout">
+
+  <!-- 左侧：健康状态 + 指标面板 -->
+  <aside id="left-panel">
+    <!-- 健康状态卡片 -->
+    <section class="card">
+      <h3 class="card-title">🫀 系统健康</h3>
+      <div id="health-content" class="health-body">
+        <div class="health-item">
+          <span class="health-label">API 状态</span>
+          <span id="health-api" class="health-value">—</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">活跃告警</span>
+          <span id="health-active-alerts" class="health-value">—</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">静默规则</span>
+          <span id="health-silences" class="health-value">—</span>
+        </div>
+        <div class="health-item">
+          <span class="health-label">告警规则</span>
+          <span id="health-rules" class="health-value">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 指标面板 -->
+    <section class="card">
+      <h3 class="card-title">📐 实时指标</h3>
+      <div id="metrics-content">
+        <pre id="metrics-raw">加载中…</pre>
+      </div>
+      <button class="btn btn-sm" onclick="refreshMetrics()">↻ 刷新指标</button>
+    </section>
+  </aside>
+
+  <!-- 中部+右侧：告警 / 静默 / 规则 -->
+  <main id="main-panel">
+
+    <!-- 告警面板 -->
+    <section class="card card-alerts">
+      <div class="card-header">
+        <h3 class="card-title">🚨 活跃告警 <span id="alert-count" class="count"></span></h3>
+        <div class="card-actions">
+          <select id="alert-level-filter" onchange="renderAlerts()">
+            <option value="">全部级别</option>
+            <option value="Warning">⚠️ Warning</option>
+            <option value="Critical">🔥 Critical</option>
+            <option value="Emergency">💀 Emergency</option>
+          </select>
+          <select id="alert-status-filter" onchange="renderAlerts()">
+            <option value="">全部状态</option>
+            <option value="Firing">Firing</option>
+            <option value="Acked">已确认</option>
+            <option value="Pending">Pending</option>
+          </select>
+          <button class="btn btn-sm" onclick="refreshAlerts()">↻ 刷新</button>
+        </div>
+      </div>
+      <div id="alerts-table-wrap">
+        <table id="alerts-table">
+          <thead>
+            <tr>
+              <th>级别</th>
+              <th>告警规则</th>
+              <th>服务</th>
+              <th>摘要</th>
+              <th>触发时间</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="alerts-tbody">
+            <tr><td colspan="7" class="empty-row">加载中…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 静默 / 规则 两栏 -->
+    <div id="bottom-row">
+
+      <!-- 静默规则面板 -->
+      <section class="card card-half">
+        <div class="card-header">
+          <h3 class="card-title">🔇 静默窗口</h3>
+          <button class="btn btn-sm btn-primary" onclick="showSilenceForm()">+ 新建</button>
+        </div>
+        <div id="silences-list">
+          <div class="empty-row">暂无静默规则</div>
+        </div>
+      </section>
+
+      <!-- 告警规则面板 -->
+      <section class="card card-half">
+        <div class="card-header">
+          <h3 class="card-title">⚙️ 告警规则</h3>
+          <button class="btn btn-sm btn-primary" onclick="showRuleForm()">+ 新建</button>
+        </div>
+        <div id="rules-list">
+          <div class="empty-row">暂无规则</div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- 静默创建模态框 -->
+<div id="silence-modal" class="modal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>创建静默窗口</h3>
+      <span class="modal-close" onclick="closeModal('silence-modal')">&times;</span>
+    </div>
+    <form id="silence-form" onsubmit="submitSilence(event)">
+      <label>原因 <input type="text" name="reason" required placeholder="例：数据库维护"></label>
+      <label>开始时间 <input type="datetime-local" name="starts_at" required></label>
+      <label>结束时间 <input type="datetime-local" name="ends_at" required></label>
+      <label>标签匹配 KEY <input type="text" name="label_key" placeholder="例：component"></label>
+      <label>标签匹配 VALUE <input type="text" name="label_value" placeholder="例：database"></label>
+      <label>最低告警级别
+        <select name="min_severity">
+          <option value="">不限</option>
+          <option value="Warning">Warning</option>
+          <option value="Critical">Critical</option>
+          <option value="Emergency">Emergency</option>
+        </select>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">创建</button>
+        <button type="button" class="btn" onclick="closeModal('silence-modal')">取消</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 规则创建模态框 -->
+<div id="rule-modal" class="modal" style="display:none">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>创建告警规则</h3>
+      <span class="modal-close" onclick="closeModal('rule-modal')">&times;</span>
+    </div>
+    <form id="rule-form" onsubmit="submitRule(event)">
+      <label>规则名称 <input type="text" name="name" required placeholder="例：high_cpu"></label>
+      <label>指标模式 <input type="text" name="metric_pattern" required placeholder="例：cpu_usage"></label>
+      <label>
+        比较操作
+        <select name="op" required>
+          <option value="gt">&gt; 大于</option>
+          <option value="gte">&gt;= 大于等于</option>
+          <option value="lt">&lt; 小于</option>
+          <option value="lte">&lt;= 小于等于</option>
+        </select>
+      </label>
+      <label>阈值 <input type="number" name="threshold" step="0.01" required placeholder="0.85"></label>
+      <label>持续秒数 <input type="number" name="duration_secs" value="60"></label>
+      <label>
+        告警级别
+        <select name="level" required>
+          <option value="Warning">Warning</option>
+          <option value="Critical">Critical</option>
+          <option value="Emergency">Emergency</option>
+        </select>
+      </label>
+      <label>摘要 <input type="text" name="summary" required placeholder="CPU 使用率过高"></label>
+      <label>描述 <input type="text" name="description" required placeholder="详细描述…"></label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">创建</button>
+        <button type="button" class="btn" onclick="closeModal('rule-modal')">取消</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

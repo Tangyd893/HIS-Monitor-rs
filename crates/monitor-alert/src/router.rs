@@ -135,6 +135,7 @@ pub struct RouteResult {
 // ── 路由器 ──
 
 /// 告警路由器
+#[derive(Debug, Clone)]
 pub struct AlertRouter {
     config: RouterConfig,
     /// 按级别索引的路由（快速查找）

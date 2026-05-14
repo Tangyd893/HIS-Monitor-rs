@@ -10,6 +10,7 @@ path = "src/main.rs"
 
 [dependencies]
 monitor-core = { path = "../monitor-core" }
+monitor-alert = { path = "../monitor-alert" }
 tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -19,3 +20,7 @@ axum = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }
 anyhow = { workspace = true }
+prometheus = { workspace = true }
+chrono = { workspace = true }
+uuid = { version = "1", features = ["v4"] }
+async-trait = "0.1"

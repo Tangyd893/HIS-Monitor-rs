@@ -22,6 +22,24 @@ pub async fn run(host: &str, port: u16) -> anyhow::Result<()> {
     let app = Router::new()
         .route("/health", get(handler::health))
         .route("/metrics", get(handler::metrics))
+        .route("/api/v1/alerts", get(handler::list_alerts))
+        .route("/api/v1/alerts/{id}", get(handler::get_alert))
+        .route(
+            "/api/v1/alerts/{id}/ack",
+            axum::routing::post(handler::ack_alert),
+        )
+        .route(
+            "/api/v1/silences",
+            get(handler::list_silences).post(handler::create_silence),
+        )
+        .route(
+            "/api/v1/silences/{id}",
+            axum::routing::delete(handler::delete_silence),
+        )
+        .route(
+            "/api/v1/rules",
+            get(handler::list_rules).post(handler::create_rule),
+        )
         .layer(TraceLayer::new_for_http());
 
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
